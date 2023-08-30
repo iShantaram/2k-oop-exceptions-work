@@ -16,32 +16,45 @@ public class ExceptionsWork {
 
             try {
                 checkInputData(login, password, confirmPassword);
-            } catch (WrongLoginException e) {
+            } catch (WrongLoginException | WrongPasswordException e) {
                 throw new RuntimeException(e);
-                //System.out.println(e);
-            } catch (WrongPasswordException e) {
-                throw new RuntimeException(e);
-                //System.out.println(e);
+                //System.out.println(e.getMessage());
             }
         //}
     }
 
-    public static void checkInputData(String login, String password, String confirmPassword) {
-        // Создаем шаблон для недопустимого символа в логине или пароле
-        Pattern pattern = Pattern.compile("\\W+");
-        Matcher matcherLogin = pattern.matcher(login);
-        Matcher matcherPassword = pattern.matcher(password);
+    public static void checkInputData(String login, String password, String confirmPassword) throws WrongLoginException, WrongPasswordException {
 
-        // Проверка логина на недопустимые символы и превышение длины
-        if (matcherLogin.find() || login.length() > 20) {
-            throw new WrongLoginException("Incorrect login!");
+        final int maxLoginLength = 20;
+        final int maxPasswordLength = 20;
+
+        /** Создаем шаблоны для недопустимого символа в логине и пароле
+         * \w - Символы, соответствующие словам, сокращение от [a-zA-Z_0-9]
+         * \W - Символы, не образующие слов, отрицание предыдущего шаблона
+         */
+        Pattern patternIncorrectLoginSymbol = Pattern.compile("\\W+");
+        Matcher matcherIncorrectLoginSymbol = patternIncorrectLoginSymbol.matcher(login);
+
+        Pattern patternIncorrectPasswordSymbol = Pattern.compile("\\W+");
+        Matcher matcherIncorrectPasswordSymbol = patternIncorrectPasswordSymbol.matcher(password);
+
+        // Проверка логина на недопустимые символы
+        if (matcherIncorrectLoginSymbol.find()) {
+            throw new WrongLoginException("Incorrect symbol in login!");
+        }
+        // Проверка логина на превышение длины
+        if (login.length() > maxLoginLength) {
+            throw new WrongLoginException(String.format("Login length must not be longer than %d symbols", maxLoginLength));
         }
 
-        // Проверка пароля на недопустимые символы и превышение длины
-        if (matcherPassword.find() || password.length() > 20) {
-            throw new WrongPasswordException("Incorrect password!");
+        // Проверка пароля на недопустимые символы
+        if (matcherIncorrectPasswordSymbol.find()) {
+            throw new WrongPasswordException("Invalid symbol in password!");
         }
-
+        // Проверка пароля на превышение длины
+        if (password.length() > maxPasswordLength) {
+            throw new WrongPasswordException(String.format("Password length must not be longer than %d symbols", maxPasswordLength));
+        }
         // Проверка совпадения пароля и подтверждения пароля
         if (!password.equals(confirmPassword)){
             throw new WrongPasswordException("Confirmation does not match password!");
